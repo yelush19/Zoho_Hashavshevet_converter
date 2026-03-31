@@ -2,6 +2,10 @@ import streamlit as st
 import pandas as pd
 import io
 import re
+from pathlib import Path
+
+# ── Logo path ────────────────────────────────────────────────────────
+LOGO_PATH = Path(__file__).parent / "logo.jpg"
 
 
 def format_date(date_str: str) -> str:
@@ -96,6 +100,8 @@ st.markdown("העלי קובץ Excel / CSV מ-Zoho Books וקבלי קובץ מ�
 
 # ── Sidebar settings ─────────────────────────────────────────────────
 with st.sidebar:
+    if LOGO_PATH.exists():
+        st.image(str(LOGO_PATH), width=120)
     st.header("⚙️ הגדרות חשבונות")
     debit_acct = st.text_input("חשבון חובה (לקוחות חו״ל)", value="200099")
     credit_acct = st.text_input("חשבון זכות (הכנסות)", value="700000")

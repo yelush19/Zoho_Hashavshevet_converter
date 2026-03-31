@@ -2,24 +2,14 @@ import streamlit as st
 import pandas as pd
 import io
 import re
-from pyluach import dates
-
-# ── Hebrew date helpers ──────────────────────────────────────────────
-# pyluach uses Nisan-based months; Hashavshevet expects Tishrei-based
-PYLUACH_TO_TISHREI = {
-    7: 1, 8: 2, 9: 3, 10: 4, 11: 5, 12: 6,
-    1: 7, 2: 8, 3: 9, 4: 10, 5: 11, 6: 12, 13: 13,
-}
 
 
-def gregorian_to_hebrew(date_str: str) -> str:
-    """Convert 'YYYY-MM-DD' → 'dd/mm/yyyy' in the Hebrew calendar."""
+def format_date(date_str: str) -> str:
+    """Convert 'YYYY-MM-DD' → 'DD/MM/YYYY'."""
     try:
         parts = str(date_str).strip()[:10].split("-")
         y, m, d = int(parts[0]), int(parts[1]), int(parts[2])
-        heb = dates.GregorianDate(y, m, d).to_heb()
-        heb_month = PYLUACH_TO_TISHREI.get(heb.month, heb.month)
-        return f"{heb.day:02d}/{heb_month:02d}/{heb.year}"
+        return f"{d:02d}/{m:02d}/{y}"
     except Exception as e:
         return f"ERR: {e}"
 
@@ -63,8 +53,8 @@ def convert_df(
             errors.append(f"שורה {row_num}: סכום חסר")
             continue
 
-        heb_date = gregorian_to_hebrew(str(r[col_date]))
-        if heb_date.startswith("ERR"):
+        formatted_date = format_date(str(r[col_date]))
+        if formatted_date.startswith("ERR"):
             errors.append(f"שורה {row_num}: תאריך לא תקין – {r[col_date]}")
             continue
 
@@ -74,7 +64,7 @@ def convert_df(
 
         rows.append(
             {
-                "תאריך": heb_date,
+                "תאריך": formatted_date,
                 "חשבון חובה": debit_account,
                 "חשבון זכות 1": credit_account,
                 "חשבון זכות 2": "",
@@ -110,14 +100,7 @@ with st.sidebar:
     debit_acct = st.text_input("חשבון חובה (לקוחות חו״ל)", value="200099")
     credit_acct = st.text_input("חשבון זכות (הכנסות)", value="700000")
     st.divider()
-    st.markdown(
-        "**מיפוי חודשים עבריים**\n\n"
-        "תשרי=01 · חשוון=02 · כסלו=03\n\n"
-        "טבת=04 · שבט=05 · אדר=06\n\n"
-        "ניסן=07 · אייר=08 · סיוון=09\n\n"
-        "תמוז=10 · אב=11 · אלול=12\n\n"
-        "אדר ב׳=13"
-    )
+    st.markdown("**פורמט תאריך פלט:** DD/MM/YYYY")
 
 # ── File upload ──────────────────────────────────────────────────────
 uploaded = st.file_uploader(
@@ -244,7 +227,7 @@ else:
     st.markdown("### דוגמה")
     example = pd.DataFrame(
         {
-            "תאריך": ["16/04/5786"],
+            "תאריך": ["05/01/2026"],
             "חשבון חובה": ["200099"],
             "חשבון זכות 1": ["700000"],
             "חשבון זכות 2": [""],
